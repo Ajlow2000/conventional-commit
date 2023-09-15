@@ -46,9 +46,9 @@ printf "%b\n" "\033[1mCommit Body:\033[0m\n$body\n"
 breaking=false
 gum confirm "Breaking Change?" --affirmative=Yes --negative=No && breaking=true
 case "$breaking" in
-    true) breaking="!" && breakingFooterKey="BREAKING CHANGE" && breakingFooterVal=$(gum input --placeholder "Breaking Change Description: ")
+    true) breaking="!" && breakingFooterKey="BREAKING CHANGE: " && breakingFooterVal=$(gum input --placeholder "Breaking Change Description: ")
     ;;
-    *) breaking=""
+    *) breaking="" && breakingFooterKey="" && breakingFooterVal=""
     ;;
 esac
 
@@ -59,7 +59,7 @@ mkdir -p $dir
 touch $commit_file
 
 # write to file
-printf "$type$scope$breaking: $desc\n\n$body\n\n$breakingFooterKey: $breakingFooterVal\n" > $commit_file
+printf "$type$scope$breaking: $desc\n\n$body\n\n$breakingFooterKey$breakingFooterVal\n" > $commit_file
 
 printf "Commit Message written to $commit_file"
 
