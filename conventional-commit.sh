@@ -54,19 +54,22 @@ esac
 
 # Build commit file
 dir=$XDG_DATA_HOME/conventional-commit
-commit_file=$dir/commit.temp
+file=$dir/commit
+tmpFile=$file.tmp
+commitFile=$file.fmt
 mkdir -p $dir
-touch $commit_file
+touch $tmpFile
 
 # write to file
-printf "$type$scope$breaking: $desc\n\n$body\n\n$breakingFooterKey$breakingFooterVal\n" > $commit_file
+printf "$type$scope$breaking: $desc\n\n$body\n\n$breakingFooterKey$breakingFooterVal\n" > $tmpFile
+fmt $tmpFile > $commitFile
 
-printf "Commit Message written to $commit_file"
+printf "Commit Message written to $tmpFile"
 
 gum confirm "Confirm Commit?" --affirmative=Yes --negative=No && commit=true
 
 case "$commit" in
-    true) git commit --file $commit_file
+    true) git commit --file $commitFile
     ;;
     *) exit 1
     ;;
