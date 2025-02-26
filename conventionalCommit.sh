@@ -1,56 +1,112 @@
 #!/usr/bin/env bash
 
-# <><> Commit Type <><>
+trap "exit" INT
 
-# Build associative array of valid commmit types
-#  [type]:[desc]
-declare -A commitTypes
-commitTypes["feat"]="Implementation of a new feature"
-commitTypes["fix"]="A bug fix"
-commitTypes["build"]="Changes to build system"
-commitTypes["chore"]="Updating grunt tasks etc. No production code change"
-commitTypes["ci"]="Changes to CI/CD pipeline"
-commitTypes["docs"]="Documentation only changes"
-commitTypes["perf"]="A code change that improves performance"
-commitTypes["refactor"]="A code change that neither fixes a bug nor adds a feature"
-commitTypes["style"]="Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"
-commitTypes["test"]="Adding missing tests or correcting existing tests"
-commitTypes["WIP"]="An incomplete commit purely with the intent to push code off a local machine"
+# status codes
+declare -A STATUS
+STATUS["SUCCESS"]=0
+STATUS["MISC"]=1
+STATUS["MISUSE"]=2
+STATUS["INVALID_INPUT"]=55
 
-# Build \n deliminated string of valid commit types
-# for use with fzf
-typeMenu=""
-for key in "${!commitTypes[@]}"; do
-    typeMenu+="$key\n"
-done
-
-# Prompt user for commit type selection
-type=$(echo -e "$typeMenu" | gum filter \
-    --placeholder "Commit Type: "
+commitTypes=$(cat <<'EOF'
+feat        Implementation of a new feature
+fix         A bug fix
+build       Changes to build system
+chore       Updating grunt tasks etc. No production code change
+ci          Changes to CI/CD pipeline
+docs        Documentation only changes
+perf        A code change that improves performance
+refactor    A code change that neither fixes a bug nor adds a feature
+style       Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+test        Adding missing tests or correcting existing tests
+wip         An incomplete commit purely with the intent to push code off a local machine
+EOF
 )
 
-printf "%b\n" "\033[1mCommit Type:\033[0m\n$type\n"
 
-scope=$(gum input --prompt "Commit Scope (optional): ")
-printf "%b\n" "\033[1mCommit Scope:\033[0m\n$scope\n"
-if [ "$scope" != "" ]; then
-    scope="($scope)"
+# Prompt user for commit type selection
+type=$(echo -e "$commitTypes" \
+    | fzf \
+    --header "Commit Type: " \
+    --style full \
+    --reverse \
+    --height ~100% \
+    | awk '{print $1}'
+)
+
+# Trim whitespace
+type=$(echo "$type" | xargs)
+
+if [ "$type" == "" ]; then
+    echo "No Commit Type selected [required]" >&2
+    exit "${STATUS['INVALID_INPUT']}"
 fi
 
-desc=$(gum input --prompt "Commit Description: ")
-printf "%b\n" "\033[1mCommit Description:\033[0m\n$desc\n"
 
-body=$(gum write --header "Commit Body (optional)[ctr-d to end]: ")
-printf "%b\n" "\033[1mCommit Body:\033[0m\n$body\n"
+# Check if there is a local commit scopes file
+scopesFile=$(git rev-parse --show-toplevel)
+scopesFile="$scopesFile/.commit-scopes"
+commitScopes=""
+if [ -f "$scopesFile" ]; then
+    # File exists, proceed to read it
+    while IFS= read -r line; do
+        commitScopes="$commitScopes\n$line"
+        # the leading '\n' makes the default suggestion empty (ideal)
+    done < "$scopesFile"
+fi
 
-breaking=false
-gum confirm "Breaking Change?" --affirmative=Yes --negative=No && breaking=true
-case "$breaking" in
-    true) breaking="!" && breakingFooterKey="BREAKING CHANGE: " && breakingFooterVal=$(gum input --placeholder "Breaking Change Description: ")
-    ;;
-    *) breaking="" && breakingFooterKey="" && breakingFooterVal=""
-    ;;
-esac
+# Prompt for commit scope selection
+scope=$(echo -e "$commitScopes" \
+    | fzf \
+    --header "Commit Scope: (optional)" \
+    --style full \
+    --reverse \
+    --height ~100% \
+    --print-query
+)
+
+# Trim whitespace
+scope=$(echo "$scope" | xargs)
+
+desc=$(echo "" \
+    | fzf \
+    --header "Commit Description" \
+    --style full \
+    --reverse \
+    --height ~100% \
+    --print-query
+)
+
+# Trim whitespace
+desc=$(echo "$desc" | xargs)
+
+# If Desc is empty, open editor for long form writing
+if [ "$desc" == "" ]; then
+    desc=$(vipe)
+fi
+
+
+# Desc is required
+if [ "$desc" == "" ]; then
+    echo "No Commit Description provided [required]" >&2
+    exit "${STATUS['INVALID_INPUT']}"
+fi
+
+breakingReason=$(echo "" \
+    | fzf \
+    --header "Provide reason for breaking change (optional)" \
+    --style full \
+    --reverse \
+    --height ~100% \
+    --print-query
+)
+
+breakingFlag=""
+if [ "$breakingReason" != "" ]; then
+    breakingReason="BREAKING CHANGE: $breakingReason"
+    breakingFlag="!"
+fi
 
 # Build commit file
 dir=$XDG_DATA_HOME/conventional-commit
@@ -61,17 +117,10 @@ mkdir -p "$dir"
 touch "$tmpFile"
 
 # write to file
-echo -e "$type$scope$breaking: $desc\n\n$body\n\n$breakingFooterKey$breakingFooterVal\n" > "$tmpFile"
+echo -e "$type($scope)$breakingFlag: $desc\n\n$breakingReason\n" > "$tmpFile"
 fmt "$tmpFile" > "$commitFile"
 
-echo -e "Commit Message written to $tmpFile"
-
-gum confirm "Confirm Commit?" --affirmative=Yes --negative=No && commit=true
-
-case "$commit" in
-    true) git commit --file "$commitFile"
-    ;;
-    *) exit 1
-    ;;
-esac
-
+git commit --file "$commitFile"
+echo ""
+git status
+exit "${STATUS['SUCCESS']}"

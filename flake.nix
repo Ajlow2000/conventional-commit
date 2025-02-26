@@ -12,7 +12,9 @@
         packages.${system}.default = 
             pkgs.writeShellApplication {
                 name = "conventional-commit";
-                runtimeInputs = [];
+                runtimeInputs = [
+                    pkgs.moreutils
+                ];
                 text = builtins.readFile ./conventionalCommit.sh;
             };
 
@@ -22,6 +24,7 @@
                 buildInputs = with pkgs;[
                     nil
                     bash-language-server
+                    moreutils
                 ];
             };
     };
