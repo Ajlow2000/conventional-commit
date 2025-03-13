@@ -4,15 +4,16 @@ use clap::{command, Arg, ArgAction, ArgMatches};
 
 mod commit;
 mod collect;
+
+use collect::{collect_commit_scope, collect_commit_type, collect_description};
 use commit::CommitMsg;
 
 fn main() {
     let _ = parse_cli();
-    println!("Hello, world!");
-    // if let Some(breaking_change) = matches.get_one::<bool>("breaking_change") {
-    //     println!("{}", breaking_change);
-    // }
 
+    let commit_type = collect_commit_type();
+    let scope = collect_commit_scope();
+    let desc = collect_description();
 
 
     // let mut fzf = Fzf::default();

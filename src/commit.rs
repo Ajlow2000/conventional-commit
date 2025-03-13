@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub struct CommitMsg {
-    conv_type: SupportedType,
+    commit_type: SupportedType,
     scope: Option<String>,
     title: String,
     body: Option<String>,

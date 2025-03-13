@@ -1,16 +1,16 @@
 
-fn collect_commit_type() -> String {
+pub fn collect_commit_type() -> String {
     unimplemented!()
 }
 
-fn collect_commit_scope() -> String {
+pub fn collect_commit_scope() -> String {
     unimplemented!()
 }
 
-fn collect_description() -> String {
+pub fn collect_description() -> String {
     unimplemented!()
 }
 
-fn collect_breaking_reason() -> String {
+pub fn collect_breaking_reason() -> String {
     unimplemented!()
 }
