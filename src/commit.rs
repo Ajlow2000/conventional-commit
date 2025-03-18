@@ -1,11 +1,13 @@
+use strum::EnumIter;
+
 #[derive(Debug)]
 pub struct CommitMsg {
-    commit_type: SupportedType,
-    scope: Option<String>,
-    title: String,
-    body: Option<String>,
-    related_ticket: Option<Ticket>,
-    breaking_reason: Option<String>,
+    pub commit_type: String,//SupportedType,
+    pub scope: Option<String>,
+    pub desc: String,
+    // pub body: Option<String>,
+    pub related_ticket: Option<String>,//Option<Ticket>,
+    pub breaking_reason: Option<String>,
 }
 
 impl CommitMsg {
@@ -13,19 +15,23 @@ impl CommitMsg {
         unimplemented!()
     }
 
-    pub fn commit() {
-        unimplemented!()
-    }
-
-    fn build(self) {
-        unimplemented!()
+    pub fn commit(&self) {
+        let ticket = "";
+        let reason = "";
+        let formated_msg = format!("{}{}: {}\n{}\n{}",
+            self.commit_type,
+            self.scope,
+            self.desc,
+            self.related_ticket,
+            self.breaking_reason,
+        );
     }
 }
 
 #[derive(Debug)]
-struct CommitType {
-    value: String,
-    description: String,
+pub struct CommitType {
+    pub value: String,
+    pub description: String,
 }
 impl CommitType {
     fn new(value: &str, description: &str) -> CommitType {
@@ -36,8 +42,8 @@ impl CommitType {
     }
 }
 
-#[derive(Debug)]
-enum SupportedType {
+#[derive(Debug, EnumIter)]
+pub enum SupportedType {
     Feature,
     Fix,
     Build,
@@ -51,7 +57,7 @@ enum SupportedType {
 }
 
 impl SupportedType {
-    fn value(&self) -> CommitType {
+    pub fn to_commit_type(&self) -> CommitType {
         match *self {
             SupportedType::Feature => CommitType::new("feat", "Implementation of a new feature"),
             SupportedType::Fix => CommitType::new("fix", "A bug fix"),
