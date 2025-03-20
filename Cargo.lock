@@ -98,6 +98,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "fzf-wrapped",
+ "git-wrapper",
  "strum",
  "subprocess",
 ]
@@ -194,6 +195,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "git-wrapper"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63036aac0d4d3e7a0a269eb08920dcb9230070ca423081445991ec616b9676ef"
+dependencies = [
+ "posix-errors",
+ "thiserror",
+]
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -228,6 +239,12 @@ name = "once_cell"
 version = "1.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cde51589ab56b20a6f686b2c68f7a0bd6add753d697abf720d63f8db3ab7b1ad"
+
+[[package]]
+name = "posix-errors"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f2338a801647f2b07c5b4584accd6705f219fbbc73a6217e26d97e1437b60c5"
 
 [[package]]
 name = "proc-macro2"
@@ -340,6 +357,26 @@ checksum = "45c6481c4829e4cc63825e62c49186a34538b7b2750b73b266581ffb612fb5ed"
 dependencies = [
  "rustix",
  "windows-sys",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
 ]
 
 [[package]]
