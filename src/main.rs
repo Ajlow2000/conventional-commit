@@ -13,6 +13,12 @@ static DEFAULT_COMMIT_SCOPES_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 fn main() {
+    // FIXME - fzf_wrapped spawns child processes that swallow this.
+    //         Need to find a way to pass SIGINT to parent processes..
+    ctrlc::set_handler(move || {
+        println!("foo");
+    }).expect("Error setting Ctrl-C handler");
+
     let args = parse_cli();
 
     let breaking_change = args.get_one::<bool>(SupportedArgIDs::BreakingChange.as_str()).unwrap_or_else(|| {
