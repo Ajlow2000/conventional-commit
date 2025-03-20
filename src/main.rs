@@ -25,8 +25,6 @@ fn main() {
         panic!("An error occured while fetching {} value from parsed args.", SupportedArgIDs::CommitScopesPath.as_str());
     });
 
-    println!("Path to commit scopes: {}", commit_scopes_path.to_str().unwrap_or("error"));
-
     let commit_type = collect_commit_type();
     let scope = collect_commit_scope(&commit_scopes_path);
     let desc = collect_description();
@@ -41,7 +39,7 @@ fn main() {
         related_ticket: ticket.clone(),
     };
 
-    commit_msg.commit();
+    println!("{}", commit_msg.commit());
 
     // println!("Type: {}", &commit_type);
     // println!("Scope: {}", &scope.unwrap_or("none".to_string()));

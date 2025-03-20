@@ -38,6 +38,7 @@ pub fn collect_commit_scope(scopes_file: &PathBuf) -> Option<String> {
         // .ansi(value)
         .custom_args(vec![
             "--height=~100%".to_string(),
+            "--bind=enter:replace-query+print-query".to_string(),
         ])
         .build()
         .unwrap();
@@ -45,7 +46,11 @@ pub fn collect_commit_scope(scopes_file: &PathBuf) -> Option<String> {
     fzf.add_items(scope_options).expect("Failed to add commit scope options into fzf");
     let users_selection = fzf.output().expect("Failed to get output from fzf selection").trim().to_string();
 
-    Some(users_selection)
+    if users_selection == "".to_string() {
+        Some("".to_string())
+    } else {
+        Some(format!("({})", users_selection))
+    }
 }
 
 pub fn collect_description() -> String {
@@ -58,7 +63,7 @@ pub fn collect_description() -> String {
         // .ansi(value)
         .custom_args(vec![
             "--height=~100%".to_string(),
-            "--print-query".to_string(),
+            "--bind=enter:replace-query+print-query".to_string(),
         ])
         .build()
         .unwrap();
@@ -80,7 +85,6 @@ pub fn collect_description() -> String {
 }
 
 fn collect_text_from_vipe(existing_text: String)  -> String {
-    println!("Existing stdin: {} ", existing_text);
     let text = subprocess::Exec::shell("vipe").stdin(existing_text.as_str()).capture().expect("No valid output captured from vipe").stdout_str();
     text
 }
@@ -96,7 +100,7 @@ pub fn collect_breaking_reason(collect: bool) -> Option<String> {
             // .ansi(value)
             .custom_args(vec![
                 "--height=~100%".to_string(),
-                "--print-query".to_string(),
+                "--bind=enter:replace-query+print-query".to_string(),
             ])
             .build()
             .unwrap();
@@ -121,7 +125,7 @@ pub fn collect_linked_ticket(collect: bool) -> Option<String> {
             // .ansi(value)
             .custom_args(vec![
                 "--height=~100%".to_string(),
-                "--print-query".to_string(),
+                "--bind=enter:replace-query+print-query".to_string(),
             ])
             .build()
             .unwrap();

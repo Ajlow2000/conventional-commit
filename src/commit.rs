@@ -11,20 +11,15 @@ pub struct CommitMsg {
 }
 
 impl CommitMsg {
-    pub fn new() {
-        unimplemented!()
-    }
-
-    pub fn commit(&self) {
-        let ticket = "";
-        let reason = "";
-        let formated_msg = format!("{}{}: {}\n{}\n{}",
+    pub fn commit(&self) -> String {
+        let formated_msg = format!("{}{}: {}\n\n\nTICKET: {}\nBREAKING CHANGE: {}",
             self.commit_type,
-            self.scope,
+            self.scope.clone().unwrap_or("".to_string()),
             self.desc,
-            self.related_ticket,
-            self.breaking_reason,
+            self.related_ticket.clone().unwrap_or("".to_string()),
+            self.breaking_reason.clone().unwrap_or("".to_string()),
         );
+        formated_msg
     }
 }
 
