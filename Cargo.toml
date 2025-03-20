@@ -1,0 +1,13 @@
+[package]
+name = "conventional-commit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.32", features = ["cargo", "wrap_help"] }
+ctrlc = "3.4.5"
+fzf-wrapped = "0.1.4"
+serde = { version = "1.0.219", features = ["derive", "serde_derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
+subprocess = "0.2.9"
+toml = "0.8.20"

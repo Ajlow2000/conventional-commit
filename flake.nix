@@ -1,31 +1,42 @@
 {
     inputs = {
-        nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+        nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+        cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
     };
 
-    outputs = { self, nixpkgs }:
-    let
-        system = "x86_64-linux";
-        pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
-        packages.${system}.default = 
-            pkgs.writeShellApplication {
-                name = "conventional-commit";
-                runtimeInputs = [
-                    pkgs.moreutils
-                ];
-                text = builtins.readFile ./conventionalCommit.sh;
-            };
+    outputs = inputs: with inputs;
+        let
+           forAllSystems = nixpkgs.lib.genAttrs nixpkgs.lib.platforms.unix;
+           nixpkgsFor = forAllSystems (system: import nixpkgs {
+                inherit system;
+                config = { };
+                overlays = [ cargo2nix.overlays.default ]; # create nixpkgs that contains rustBuilder from cargo2nix overlay
+            });
 
+        in {
+            apps = forAllSystems (system:
+                let 
+                    pkgs = nixpkgsFor."${system}"; 
 
-        devShell.x86_64-linux =
-            pkgs.mkShell {
-                buildInputs = with pkgs;[
-                    nil
-                    bash-language-server
-                    moreutils
-                ];
-            };
-    };
+                    # create the workspace & dependencies package set
+                    rustPkgs = pkgs.rustBuilder.makePackageSet {
+                        rustVersion = "1.84.1";
+                        packageFun = import ./Cargo.nix;
+                    };
+                in {
+                    default = (rustPkgs.workspace.hello-world {});
+                }
+            );
+            devShells = forAllSystems (system:
+                let pkgs = nixpkgsFor."${system}"; in {
+                    default = pkgs.mkShell {
+                        packages = with pkgs; [
+                            rustc
+                            cargo
+                            rust-analyzer
+                        ];
+                    };
+                }
+            );
+       };
 }
