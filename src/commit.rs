@@ -1,4 +1,5 @@
 use strum::EnumIter;
+use subprocess::Exec;
 
 #[derive(Debug)]
 pub struct CommitMsg {
@@ -11,15 +12,21 @@ pub struct CommitMsg {
 }
 
 impl CommitMsg {
-    pub fn commit(&self) -> String {
-        let formated_msg = format!("{}{}: {}\n\n\nTICKET: {}\nBREAKING CHANGE: {}",
+    pub fn commit(&self) {
+        let formatted_msg = format!("{}{}{}: {}\n\n\n{}\n{}",
             self.commit_type,
-            self.scope.clone().unwrap_or("".to_string()),
+            self.scope.clone().unwrap_or("".to_string()), // REVIEW: ponder on use of clone()
+            if self.breaking_reason.is_some() { "!".to_string() } else { "".to_string() },
             self.desc,
             self.related_ticket.clone().unwrap_or("".to_string()),
             self.breaking_reason.clone().unwrap_or("".to_string()),
         );
-        formated_msg
+        let cmd = format!("git commit -m \"{formatted_msg}\"");
+        let output = Exec::shell(cmd)
+            .capture()
+            .expect("Failed to captue stdout")
+            .stdout_str();
+        println!("{}", output);
     }
 }
 

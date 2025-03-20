@@ -28,9 +28,8 @@ pub fn collect_commit_type() -> String {
     users_selection
 }
 
-pub fn collect_commit_scope(scopes_file: &PathBuf) -> Option<String> {
-    let scope_options = vec!["", "flake", "gitignore", "actions"];
-
+pub fn collect_commit_scope(mut default_scopes: Vec<String>) -> Option<String> {
+    default_scopes.insert(0, "".to_string());
     let mut fzf = Fzf::builder()
         .border_label(" Commit Scope ")
         .border(Border::Rounded)
@@ -43,7 +42,7 @@ pub fn collect_commit_scope(scopes_file: &PathBuf) -> Option<String> {
         .build()
         .unwrap();
     fzf.run().expect("Failed to start fzf");
-    fzf.add_items(scope_options).expect("Failed to add commit scope options into fzf");
+    fzf.add_items(default_scopes).expect("Failed to add default commit scope options into fzf");
     let users_selection = fzf.output().expect("Failed to get output from fzf selection").trim().to_string();
 
     if users_selection == "".to_string() {
@@ -53,9 +52,8 @@ pub fn collect_commit_scope(scopes_file: &PathBuf) -> Option<String> {
     }
 }
 
-pub fn collect_description() -> String {
-    let scope_options = vec!["", "bump flake version", "update readme"];
-
+pub fn collect_description(mut default_messages: Vec<String>) -> String {
+    default_messages.insert(0, "".to_string());
     let mut fzf = Fzf::builder()
         .border_label(" Commit Description")
         .border(Border::Rounded)
@@ -68,7 +66,7 @@ pub fn collect_description() -> String {
         .build()
         .unwrap();
     fzf.run().expect("Failed to start fzf");
-    fzf.add_items(scope_options).expect("Failed to add commit scope options into fzf");
+    fzf.add_items(default_messages).expect("Failed to add commit scope options into fzf");
     let users_selection = fzf.output().expect("Failed to get output from fzf selection").trim().to_string();
 
     let desc = match users_selection.as_str() {
@@ -108,7 +106,7 @@ pub fn collect_breaking_reason(collect: bool) -> Option<String> {
         fzf.add_items(reasons).expect("Failed to add default breaking reasons into fzf");
         let users_selection = fzf.output().expect("Failed to get output from fzf selection").trim().to_string();
 
-        Some(users_selection)
+        Some(format!("BREAKING REASON: {}", users_selection))
     } else {
         None
     }
@@ -133,7 +131,7 @@ pub fn collect_linked_ticket(collect: bool) -> Option<String> {
         fzf.add_items(options).expect("Failed to add default options into fzf");
         let users_selection = fzf.output().expect("Failed to get output from fzf selection").trim().to_string();
 
-        Some(users_selection)
+        Some(format!("TICKET: {}", users_selection))
     } else {
         None
     }

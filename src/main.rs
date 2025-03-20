@@ -7,10 +7,18 @@ mod collect;
 
 use collect::{collect_breaking_reason, collect_commit_scope, collect_commit_type, collect_description, collect_linked_ticket};
 use commit::CommitMsg;
+use serde::Deserialize;
 
-static DEFAULT_COMMIT_SCOPES_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    PathBuf::from("./.commit-scopes")
+static DEFAULT_CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    PathBuf::from("./.conventional-commit.toml")
 });
+
+#[derive(Deserialize)]
+struct Config {
+    default_scopes: Vec<String>,
+    default_messages: Vec<String>,
+    ticket_identifier: String,
+}
 
 fn main() {
     // FIXME - fzf_wrapped spawns child processes that swallow this.
@@ -27,13 +35,29 @@ fn main() {
     let require_ticket = args.get_one::<bool>(SupportedArgIDs::RequireTicket.as_str()).unwrap_or_else(|| {
         panic!("An error occured while fetching {} value from parsed args.", SupportedArgIDs::RequireTicket.as_str());
     });
-    let commit_scopes_path = args.get_one::<PathBuf>(SupportedArgIDs::CommitScopesPath.as_str()).unwrap_or_else(|| {
-        panic!("An error occured while fetching {} value from parsed args.", SupportedArgIDs::CommitScopesPath.as_str());
+    let local_config_path = args.get_one::<PathBuf>(SupportedArgIDs::LocalConfigPath.as_str()).unwrap_or_else(|| {
+        panic!("An error occured while fetching {} value from parsed args.", SupportedArgIDs::LocalConfigPath.as_str());
     });
 
+    let mut default_scopes = vec![];
+    let mut default_messages = vec![];
+    if Path::exists(&local_config_path) {
+        let config: Config = toml::from_str(
+            &std::fs::read_to_string(&local_config_path)
+                .expect(format!("Unable to read contents of {}", &local_config_path.to_str()
+                    .expect("Could not get string representation of local_config_path"))
+                    .as_str()
+                )
+        ).expect("Failed to deserialize file contents into expect Config struct");
+        default_scopes = config.default_scopes;
+        default_messages = config.default_messages;
+    }
+
+
+
     let commit_type = collect_commit_type();
-    let scope = collect_commit_scope(&commit_scopes_path);
-    let desc = collect_description();
+    let scope = collect_commit_scope(default_scopes);
+    let desc = collect_description(default_messages);
     let breaking_reason = collect_breaking_reason(*breaking_change);
     let ticket = collect_linked_ticket(*require_ticket);
 
@@ -45,18 +69,12 @@ fn main() {
         related_ticket: ticket.clone(),
     };
 
-    println!("{}", commit_msg.commit());
-
-    // println!("Type: {}", &commit_type);
-    // println!("Scope: {}", &scope.unwrap_or("none".to_string()));
-    // println!("desc: {}", &desc);
-    // println!("breaking: {}", &breaking_reason.unwrap_or("none".to_string()));
-    // println!("ticket: {}", &ticket.unwrap_or("none".to_string()));
+    commit_msg.commit();
 }
 
 enum SupportedArgIDs {
     BreakingChange,
-    CommitScopesPath,
+    LocalConfigPath,
     RequireTicket,
 }
 
@@ -64,7 +82,7 @@ impl SupportedArgIDs {
     fn as_str(&self) -> &str {
         match *self {
             SupportedArgIDs::BreakingChange => "breaking-change",
-            SupportedArgIDs::CommitScopesPath => "commit-scopes-path",
+            SupportedArgIDs::LocalConfigPath => "local-config",
             SupportedArgIDs::RequireTicket => "require-ticket",
         }
     }
@@ -80,13 +98,12 @@ fn parse_cli() -> ArgMatches {
             .short('b')
             .action(ArgAction::SetTrue)
         )
-        .arg(Arg::new(SupportedArgIDs::CommitScopesPath.as_str())
-            .help("File in which to read commit scopes from. Values in this file are expected to be delimited by newlines.")
-            .long(SupportedArgIDs::CommitScopesPath.as_str())
-            .visible_alias("scopes")
-            .short('s')
-            .value_name("commit-scopes-file-path")
-            .default_value(DEFAULT_COMMIT_SCOPES_PATH.to_str())
+        .arg(Arg::new(SupportedArgIDs::LocalConfigPath.as_str())
+            .help("File in which to read the repo specific config TOML file.")
+            .long(SupportedArgIDs::LocalConfigPath.as_str())
+            .short('c')
+            .value_name("local-config-path")
+            .default_value(DEFAULT_CONFIG_PATH.to_str())
             .value_parser(clap::builder::PathBufValueParser::new())
         )
         .arg(Arg::new(SupportedArgIDs::RequireTicket.as_str())
