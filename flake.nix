@@ -14,19 +14,6 @@
             });
 
         in {
-            apps = forAllSystems (system:
-                let 
-                    pkgs = nixpkgsFor."${system}"; 
-
-                    # create the workspace & dependencies package set
-                    rustPkgs = pkgs.rustBuilder.makePackageSet {
-                        rustVersion = "1.84.1";
-                        packageFun = import ./Cargo.nix;
-                    };
-                in {
-                    default = (rustPkgs.workspace.hello-world {});
-                }
-            );
             packages = forAllSystems (system:
                 let pkgs = nixpkgsFor."${system}"; in {
                     default = pkgs.rustPlatform.buildRustPackage {
