@@ -15,9 +15,9 @@ static DEFAULT_CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 
 #[derive(Deserialize)]
 struct Config {
-    default_scopes: Vec<String>,
-    default_messages: Vec<String>,
-    ticket_identifier: String,
+    default_scopes: Option<Vec<String>>,
+    default_messages: Option<Vec<String>>,
+    ticket_identifier: Option<String>,
 }
 
 fn main() {
@@ -49,8 +49,8 @@ fn main() {
                     .as_str()
                 )
         ).expect("Failed to deserialize file contents into expect Config struct");
-        default_scopes = config.default_scopes;
-        default_messages = config.default_messages;
+        default_scopes = config.default_scopes.unwrap_or(vec![]);
+        default_messages = config.default_messages.unwrap_or(vec![]);
     }
 
 
