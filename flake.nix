@@ -27,6 +27,17 @@
                     default = (rustPkgs.workspace.hello-world {});
                 }
             );
+            packages = forAllSystems (system:
+                let pkgs = nixpkgsFor."${system}"; in {
+                    default = pkgs.rustPlatform.buildRustPackage {
+                        pname = "convention-commit";
+                        version = "0.1.0";
+                        src = ./.;
+                        cargoHash = "sha256-zZZ3oARtlGsEQRKlItNF7y0e6fEUi9N9KCPLZBcoHh4=";
+                        useFetchCargoVendor = true;
+                    };
+                }
+            );
             devShells = forAllSystems (system:
                 let pkgs = nixpkgsFor."${system}"; in {
                     default = pkgs.mkShell {
